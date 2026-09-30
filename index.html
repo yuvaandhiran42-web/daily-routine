@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.json">
+<title>Daily Routine</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#111827;--soft:#eef0f3;--good:#16a34a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+.app{max-width:720px;margin:auto;padding:18px 16px 40px}.top{display:flex;justify-content:space-between;align-items:flex-start;margin:8px 0 18px}.eyebrow{font-size:13px;color:var(--muted)}h1{font-size:30px;line-height:1.1;margin:4px 0;font-weight:800}.date{font-size:13px;color:var(--muted)}button{border:0;border-radius:12px;min-height:44px;padding:0 14px;font-weight:700;cursor:pointer;background:var(--card);color:var(--text);border:1px solid var(--line)}button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hero{background:var(--accent);color:white;border-radius:22px;padding:20px;margin-bottom:14px}.hero-row{display:flex;justify-content:space-between;align-items:center;gap:15px}.percent{font-size:42px;font-weight:850}.hero small{opacity:.7}.bar{height:9px;background:#ffffff25;border-radius:99px;overflow:hidden;margin-top:16px}.fill{height:100%;width:0;background:#fff;border-radius:99px;transition:.25s}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
+section{margin:20px 0}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}h2{font-size:17px;margin:0}.count{font-size:12px;color:var(--muted)}.task{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:11px 12px;margin:7px 0;min-height:56px}.task input{width:21px;height:21px;accent-color:#111827;flex:0 0 auto}.task-main{flex:1;min-width:0}.task-name{font-size:14px;font-weight:650}.task.done .task-name{text-decoration:line-through;color:var(--muted)}.delete{min-width:40px;padding:0;background:transparent;border:0;color:#9ca3af}.add{display:flex;gap:8px}.add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;outline:none}.panel{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:15px}.analysis{font-size:14px;line-height:1.55}.analysis strong{font-weight:800}.history-row{display:flex;align-items:center;gap:10px;margin:10px 0}.history-date{width:92px;font-size:12px;color:var(--muted)}.history-track{flex:1;height:8px;background:var(--soft);border-radius:99px;overflow:hidden}.history-fill{height:100%;background:#111827}.history-pct{width:38px;text-align:right;font-size:12px;font-weight:700}.install{display:none;margin-bottom:14px}.empty{color:var(--muted);font-size:13px;padding:5px 0}
+@media(max-width:420px){.app{padding:15px 13px 35px}h1{font-size:27px}.stats{gap:7px}.stat{padding:12px}.percent{font-size:36px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="top">
+    <div><div class="eyebrow">Your routine</div><h1>Today</h1><div class="date" id="date"></div></div>
+    <button id="reset">Reset</button>
+  </div>
+  <div class="install panel" id="install">For iPhone: open this site in Safari, tap Share, then <b>Add to Home Screen</b>.</div>
+  <div class="hero"><div class="hero-row"><div><div class="percent" id="pct">0%</div><small>daily completion</small></div><div style="text-align:right"><b id="done">0/0</b><br><small>tasks</small></div></div><div class="bar"><div class="fill" id="fill"></div></div></div>
+  <div class="stats">
+    <div class="stat"><b id="streak">0</b><span>day streak</span></div>
+    <div class="stat"><b id="best">0%</b><span>best recent day</span></div>
+    <div class="stat"><b id="areas">0/4</b><span>areas touched</span></div>
+  </div>
+
+  <section><div class="section-head"><h2>Morning</h2><span class="count" id="c-morning"></span></div><div id="morning"></div></section>
+  <section><div class="section-head"><h2>Study / Work</h2><span class="count" id="c-study"></span></div><div id="study"></div></section>
+  <section><div class="section-head"><h2>Health</h2><span class="count" id="c-health"></span></div><div id="health"></div></section>
+  <section><div class="section-head"><h2>Evening / Night</h2><span class="count" id="c-night"></span></div><div id="night"></div></section>
+
+  <section><h2 style="margin-bottom:9px">Add a habit</h2><form class="add" id="add"><input id="newTask" maxlength="80" placeholder="e.g. Read 20 minutes"><button class="primary">Add</button></form></section>
+
+  <section><h2 style="margin-bottom:9px">Today's analysis</h2><div class="panel analysis" id="analysis"></div></section>
+
+  <section><h2 style="margin-bottom:9px">Recent history</h2><div class="panel" id="history"></div></section>
+</main>
+<script>
+const KEY="daily-routine-v1";
+const defaults=[
+["Wake up on time","morning"],["Make bed / organize room","morning"],["Plan the day","morning"],
+["Complete important study/work","study"],["Review what I learned","study"],["Limit unnecessary scrolling","study"],
+["Exercise / basketball / movement","health"],["Drink enough water","health"],["Eat regular balanced meals","health"],
+["Prepare for tomorrow","night"],["Reduce screen time before sleep","night"],["Sleep at a planned time","night"]
+];
+let data=JSON.parse(localStorage.getItem(KEY)||"null")||{tasks:defaults.map((x,i)=>({id:i+1,name:x[0],cat:x[1]})),days:{}};
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function dayState(){let d=today();if(!data.days[d])data.days[d]={};return data.days[d]}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function render(){
+ const d=dayState(); document.getElementById("date").textContent=new Intl.DateTimeFormat(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"}).format(new Date());
+ ["morning","study","health","night"].forEach(cat=>{
+  let list=data.tasks.filter(t=>t.cat===cat),box=document.getElementById(cat);box.innerHTML="";
+  list.forEach(t=>{let done=!!d[t.id];let el=document.createElement("div");el.className="task"+(done?" done":"");el.innerHTML=`<input type="checkbox" ${done?"checked":""} aria-label="${esc(t.name)}"><div class="task-main"><div class="task-name">${esc(t.name)}</div></div><button class="delete" type="button" aria-label="Delete">×</button>`;
+   el.querySelector("input").onchange=e=>{d[t.id]=e.target.checked;save();render()};
+   el.querySelector(".delete").onclick=()=>{data.tasks=data.tasks.filter(x=>x.id!==t.id);delete d[t.id];save();render()};box.appendChild(el)
+  });
+  document.getElementById("c-"+cat).textContent=list.filter(t=>d[t.id]).length+"/"+list.length;
+ });
+ updateStats(); save();
+}
+function pctFor(date){let tasks=data.tasks;let d=data.days[date]||{};return tasks.length?Math.round(tasks.filter(t=>d[t.id]).length/tasks.length*100):0}
+function updateStats(){
+ let d=dayState(), total=data.tasks.length, done=data.tasks.filter(t=>d[t.id]).length,p=total?Math.round(done/total*100):0;
+ document.getElementById("pct").textContent=p+"%";document.getElementById("fill").style.width=p+"%";document.getElementById("done").textContent=done+"/"+total;
+ let areas=["morning","study","health","night"].filter(c=>data.tasks.some(t=>t.cat===c&&d[t.id])).length;document.getElementById("areas").textContent=areas+"/4";
+ let dates=[];for(let i=0;i<30;i++){let x=new Date();x.setDate(x.getDate()-i);dates.push(x.toISOString().slice(0,10))}
+ let vals=dates.map(x=>pctFor(x)),best=Math.max(...vals,0);document.getElementById("best").textContent=best+"%";
+ let streak=0;for(let x of dates){if(pctFor(x)>=70)streak++;else break}document.getElementById("streak").textContent=streak;
+ let pending=data.tasks.filter(t=>!d[t.id]),a=document.getElementById("analysis");
+ if(!total)a.innerHTML="Add a habit to start tracking.";
+ else if(p===100)a.innerHTML="<strong>Perfect checklist today.</strong><br>You completed every task. Keep this routine realistic and repeatable.";
+ else if(p>=70)a.innerHTML="<strong>Solid day.</strong><br>You completed most of your routine. Next focus: "+pending.slice(0,3).map(t=>esc(t.name)).join(", ")+".";
+ else if(p>0)a.innerHTML="<strong>You're making progress.</strong><br>Don't try to fix the whole day at once. Finish one small task next.";
+ else a.innerHTML="<strong>Your day is ready to track.</strong><br>Start with the easiest task.";
+ let h=document.getElementById("history");h.innerHTML="";let shown=dates.slice(0,7);shown.forEach(x=>{let q=pctFor(x),row=document.createElement("div");row.className="history-row";row.innerHTML=`<div class="history-date">${x===today()?"Today":new Date(x+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}</div><div class="history-track"><div class="history-fill" style="width:${q}%"></div></div><div class="history-pct">${q}%</div>`;h.appendChild(row)})
+}
+document.getElementById("add").onsubmit=e=>{e.preventDefault();let i=document.getElementById("newTask"),n=i.value.trim();if(!n)return;data.tasks.push({id:"t"+Date.now(),name:n,cat:"night"});i.value="";save();render()};
+document.getElementById("reset").onclick=()=>{if(confirm("Reset today's checklist?")){data.days[today()]={};save();render()}};
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+render();
+</script>
+</body></html>
